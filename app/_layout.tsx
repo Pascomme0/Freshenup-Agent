@@ -15,7 +15,6 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -25,13 +24,14 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="Details" options={{ headerShown: true,headerShadowVisible: false,title: 'Détails contrat',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="ContratEnCours" options={{ headerShown: true,headerShadowVisible: false,title: 'Contrat en cours',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="ValiderContrat" options={{ headerShown: true,headerShadowVisible: false,title: 'Détails contrat',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+
+    </Stack>
   );
 }
