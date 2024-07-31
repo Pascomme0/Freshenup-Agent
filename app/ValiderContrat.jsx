@@ -4,7 +4,6 @@ import React from 'react';
 import { TailwindProvider } from 'nativewind';
 import user from '../assets/images/user.png';
 
-
 const ValiderContrat = () => {
   const handleConfirm = () => {
     Alert.alert("Confirmation", "Traitement du contrat confirmé");
@@ -38,5 +37,6 @@ const ValiderContrat = () => {
       </View>
   );
 };
+
 
 export default ValiderContrat;
