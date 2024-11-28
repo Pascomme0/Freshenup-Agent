@@ -28,10 +28,11 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="explore" options={{ headerShown: false }} />
       <Stack.Screen name="Details" options={{ headerShown: true,headerShadowVisible: false,title: 'Détails contrat',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="Infos" options={{ headerShown: true,headerShadowVisible: false,title: 'Mon profile',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
       <Stack.Screen name="ContratEnCours" options={{ headerShown: true,headerShadowVisible: false,title: 'Contrat en cours',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
       <Stack.Screen name="ValiderContrat" options={{ headerShown: true,headerShadowVisible: false,title: 'Détails contrat',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
-
     </Stack>
   );
 }
