@@ -3,13 +3,35 @@ import React from 'react';
 import { View, Text, TouchableOpacity, BackHandler, Platform, Alert, SafeAreaView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CommonActions } from '@react-navigation/native';
+import { store } from '../app/store';
+import { setUser, setToken } from '../app/userSlice';
+import * as Updates from 'expo-updates';
 
 const ProfilSections = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const restartApp = async () => {
+    if (Updates.reloadAsync) {
+      await Updates.reloadAsync(); // Redémarre complètement l'application
+    } else {
+      console.log('Updates API not available.');
+    }
+  };
+  const goToHome = (navigation) => {
+    navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Root' }], // 'Home' est le nom de votre écran initial
+        })
+    );
+  }
   const quitterApp = () => {
     Alert.alert(
       "Confirmation",
-      "Voulez-vous vraiment quitter l'application ?",
+      "Voulez-vous vraiment vous déconnecter ?",
       [
         {
           text: "Annuler",
@@ -17,16 +39,12 @@ const ProfilSections = () => {
         },
         {
           text: "Quitter",
-          onPress: () => {
-            if (Platform.OS === 'android') {
-              BackHandler.exitApp();
-            } else {
-              Alert.alert(
-                "Quitter l'application",
-                "La fermeture d'application n'est pas supportée sur iOS. Veuillez utiliser le gestionnaire de tâches de votre appareil pour quitter l'application.",
-                [{ text: "OK" }]
-              );
-            }
+          onPress: async () => {
+            await AsyncStorage.clear();
+            dispatch(setUser(null));
+            dispatch(setToken(null));
+            await restartApp();
+            // goToHome(navigation)
           }
         }
       ]
@@ -45,6 +63,34 @@ const ProfilSections = () => {
               <Text style={styles.title}>Informations personnelles</Text>
               <Text style={styles.subtitle}>informations incomplètes</Text>
             </View>
+            <View>
+              <FontAwesome name="angle-right" size={24} color="gray" />
+            </View>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/Service')}>
+          <View style={styles.card}>
+            <View style={styles.iconContainer}>
+              <FontAwesome name="user" size={24} color="skyblue" />
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>Mes services</Text>
+              <Text style={styles.subtitle}>Mettez à jours vos services</Text>
+            </View>
+            <View>
+              <FontAwesome name="angle-right" size={24} color="gray" />
+            </View>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/Justificatifs')}>
+          <View style={styles.card}>
+            <View style={styles.iconContainer}>
+              <FontAwesome name="user" size={24} color="skyblue" />
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>Mon Compte</Text>
+              <Text style={styles.subtitle}>vérifier votre statut</Text>
+            </View>
             <View style={styles.warningIcon}>
               <FontAwesome name="exclamation" size={24} color="red" light />
             </View>
@@ -53,7 +99,7 @@ const ProfilSections = () => {
             </View>
           </View>
         </TouchableOpacity>
-        
+
         {/* <TouchableOpacity onPress={() => router.push('/ProfilePages/SuiviCom')}>
           <View style={styles.card}>
             <View style={styles.iconContainer}>
