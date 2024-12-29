@@ -33,6 +33,8 @@ export default function RootLayout() {
       <Stack.Screen name="Infos" options={{ headerShown: true,headerShadowVisible: false,title: 'Mon profile',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
       <Stack.Screen name="ContratEnCours" options={{ headerShown: true,headerShadowVisible: false,title: 'Contrat en cours',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
       <Stack.Screen name="ValiderContrat" options={{ headerShown: true,headerShadowVisible: false,title: 'Détails contrat',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="Justificatifs" options={{ headerShown: true,headerShadowVisible: false,title: 'Mes Justificatifs',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="Nouveau_Justificatif" options={{ headerShown: true,headerShadowVisible: false,title: 'Ajouter une piece',headerTitleAlign: 'center',headerTitleStyle: { fontWeight: 'bold' } }} />
     </Stack>
   );
 }

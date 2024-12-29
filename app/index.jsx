@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import img from '../assets/images/LOGO.png';
 import { store } from './store';
 import { setUser, setToken } from './userSlice';
+import * as Notifications from "expo-notifications";
 
 function App() {
     const router = useRouter();
@@ -79,7 +80,38 @@ function App() {
         }
     };
 
-    const handleLogin = async (username, password) => {
+    const registerForPushNotificationsAsync = async (token) => {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+        }
+
+        if (finalStatus !== 'granted') {
+            alert('Failed to get push token for push notification!');
+            return;
+        }
+        try {
+            const tokenExpo = (await Notifications.getExpoPushTokenAsync()).data;
+            console.log(tokenExpo);
+            const response  = await axios.post("https://admin.freshen-up.net/api/users/set_expo_token", {
+                expoPushToken: tokenExpo
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+        } catch (e) {
+            console.log(e);
+            Alert.alert("Erreur", "une erreur s'est produite")
+        }
+
+    };
+
+
+    const handleLogin = async (username, password, isNew = false) => {
         setIsLoading(true);
         try {
             const response = await axios.post('https://admin.freshen-up.net/api/login', {
@@ -100,6 +132,9 @@ function App() {
             await AsyncStorage.setItem('user', JSON.stringify(userData));
             dispatch(setUser(userData));
             dispatch(setToken(token));
+            if (isNew) {
+                await registerForPushNotificationsAsync(token);
+            }
             router.replace('/(tabs)');
         } catch (error) {
             Alert.alert('Erreur', 'Identifiants invalides');
@@ -129,8 +164,9 @@ function App() {
             await AsyncStorage.setItem('credentials', JSON.stringify({ username, password, token }));
             await AsyncStorage.setItem('user', JSON.stringify(userData));
             dispatch(setUser(userData));
-
+            await registerForPushNotificationsAsync(token);
             // Rediriger vers /(tabs)
+            router.push('/(tabs)');
         } catch (error) {
             Alert.alert('Erreur', 'Identifiants invalides');
             console.log('Error fetching user data', error);
@@ -386,7 +422,7 @@ function App() {
                             marginBottom: 24,
                         }}
                         >
-                        <TouchableOpacity onPress={() => handleLogin(form2.username, form2.password)} style={{ backgroundColor: '#28a745', borderRadius: 5, padding: 10, width: 150, marginTop: 15 }}>
+                        <TouchableOpacity onPress={() => handleLogin(form2.username, form2.password, true)} style={{ backgroundColor: '#28a745', borderRadius: 5, padding: 10, width: 150, marginTop: 15 }}>
                             {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={{ textAlign: 'center', color: 'white' }}>Se connecter</Text>}
                         </TouchableOpacity>
                     </View>
