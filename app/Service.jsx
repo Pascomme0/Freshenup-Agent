@@ -97,13 +97,14 @@ const ServiceApp = () => {
     };
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
 
             <FlatList
                 style={{
                     marginHorizontal: 16,
                     marginVertical: 32,
                 }}
+                scrollEnabled={true}
                 data={services}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
@@ -119,14 +120,15 @@ const ServiceApp = () => {
                 )}
             />
             <View style={{
-                alignItems: 'center'
+                alignItems: 'center',
+                marginBottom: 35,
             }}>
                 <Pressable
                     onPress={handleUpdateServices}
                     style={{
                         backgroundColor: '#48bb78', // bg-green-500
                         padding: 12,
-                        marginTop: 64,
+                        marginTop: 10,
                         borderRadius: 8,
                         width: '50%',
                         alignItems: 'center',

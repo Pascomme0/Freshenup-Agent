@@ -108,9 +108,9 @@ const AddScreenApp = () => {
                     const userData = userResponse.data["hydra:member"][0];
                     await AsyncStorage.setItem('user', JSON.stringify(userData));
                     dispatch(setUser(userData));
-                    router.push('/')
+                    Alert.alert("Succès", "Justificatifs mis à jour")
+                    router.push('/(tabs)')
                 } catch (error) {
-                    console.log(error);
                     Alert.alert('Erreur', 'Une erreur s\'est produite lors de l\'ajout du justificatif');
                 }
                 setIsLoading(false);

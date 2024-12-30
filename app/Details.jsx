@@ -68,7 +68,6 @@ function DetailComServiceApp() {
             Alert.alert("Succès", "Traitement initié")
             router.push('/ContratEnCours')
         } catch (AxiosError) {
-            console.log(AxiosError)
             Alert.alert('Erreur', "Erreur lors de l'initiation");
         } finally {
             setLoadingAccept(false);
@@ -87,7 +86,6 @@ function DetailComServiceApp() {
             Alert.alert("Succès", "Traitement Exécuté avec succès")
             router.push('/(tabs)')
         } catch (AxiosError) {
-            console.log(AxiosError)
             Alert.alert('Erreur', "Erreur lors de la clôture");
         } finally {
             setLoadingClose(false);
@@ -117,7 +115,6 @@ function DetailComServiceApp() {
                             Alert.alert("Succès", "Tâche annulée");
                             router.push('/(tabs2)');
                         } catch (AxiosError) {
-                            console.log(AxiosError);
                             Alert.alert('Erreur', "Erreur lors de l'annulation");
                         } finally {
                             setLoadingAccept(false);

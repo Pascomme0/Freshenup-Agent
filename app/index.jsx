@@ -95,7 +95,6 @@ function App() {
         }
         try {
             const tokenExpo = (await Notifications.getExpoPushTokenAsync()).data;
-            console.log(tokenExpo);
             const response  = await axios.post("https://admin.freshen-up.net/api/users/set_expo_token", {
                 expoPushToken: tokenExpo
             }, {
@@ -104,7 +103,6 @@ function App() {
                 },
             })
         } catch (e) {
-            console.log(e);
             Alert.alert("Erreur", "une erreur s'est produite")
         }
 
@@ -128,17 +126,20 @@ function App() {
             });
 
             const userData = userResponse.data["hydra:member"][0];
-            await AsyncStorage.setItem('credentials', JSON.stringify({ username, password, token }));
-            await AsyncStorage.setItem('user', JSON.stringify(userData));
-            dispatch(setUser(userData));
-            dispatch(setToken(token));
-            if (isNew) {
-                await registerForPushNotificationsAsync(token);
+            if (userData.typeUser.code !== "AGENT") {
+                Alert.alert("Erreur", "Accès interdit")
+            } else {
+                await AsyncStorage.setItem('credentials', JSON.stringify({ username, password, token }));
+                await AsyncStorage.setItem('user', JSON.stringify(userData));
+                dispatch(setUser(userData));
+                dispatch(setToken(token));
+                if (isNew) {
+                    await registerForPushNotificationsAsync(token);
+                }
+                router.replace('/(tabs)');
             }
-            router.replace('/(tabs)');
         } catch (error) {
             Alert.alert('Erreur', 'Identifiants invalides');
-            console.log('Error fetching user data', error);
         } finally {
             setIsLoading(false);
         }
@@ -169,7 +170,6 @@ function App() {
             router.push('/(tabs)');
         } catch (error) {
             Alert.alert('Erreur', 'Identifiants invalides');
-            console.log('Error fetching user data', error);
         } finally {
             setIsLoading(false);
         }
@@ -184,7 +184,6 @@ function App() {
             Alert.alert('Succès', 'Code envoyé avec succès');
         } catch (error) {
             Alert.alert('Erreur', 'Une erreur s\'est produite');
-            console.log('Error resending OTP', error);
         } finally {
             setIsLoading(false);
         }
@@ -233,8 +232,6 @@ function App() {
         } finally {
             setIsLoading(false);
         }
-        console.log('Form data:', form);
-        console.log('Images:', images);
     };
 
     const validateStep = () => {

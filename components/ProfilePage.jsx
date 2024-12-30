@@ -58,7 +58,6 @@ const Profile = () => {
             await AsyncStorage.setItem('user', JSON.stringify(userData));
             dispatch(setUser(userData));
         } catch (error) {
-            console.log(error);
             Alert.alert("Erreur", "Une erreur s'est produite lors de la mise à jour de votre photo de profil");
         }
         setLoadingImage(false);
