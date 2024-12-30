@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "897449219963",
+    "project_id": "freshenup-c649f",
+    "storage_bucket": "freshenup-c649f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:897449219963:android:2406c328e3080669bdcfde",
+        "android_client_info": {
+          "package_name": "com.pacomebrou.Agent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgh9NpmHlSJ9K8X1QHgl429806PfW_Hhs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:897449219963:android:a8fd8498fa17c741bdcfde",
+        "android_client_info": {
+          "package_name": "com.pacomebrou.Fresh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgh9NpmHlSJ9K8X1QHgl429806PfW_Hhs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
