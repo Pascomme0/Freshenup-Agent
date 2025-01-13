@@ -67,19 +67,29 @@ const AddScreenApp = () => {
             const formData = new FormData();
             formData.append('typePiece', type);
             formData.append('number', number);
-
-            const rectoData = new FormData();
-            rectoData.append('imageFile', {
+            formData.append('imagePieces[0][imageFile]', {
                 uri: recto.uri,
                 name: recto.fileName,
                 type: recto.type
             });
-            const versoData = new FormData();
-            versoData.append('imageFile', {
+            formData.append('imagePieces[1][imageFile]', {
                 uri: verso.uri,
                 name: verso.fileName,
                 type: verso.type
             });
+
+            // const rectoData = new FormData();
+            // rectoData.append('imageFile', {
+            //     uri: recto.uri,
+            //     name: recto.fileName,
+            //     type: recto.type
+            // });
+            // const versoData = new FormData();
+            // versoData.append('imageFile', {
+            //     uri: verso.uri,
+            //     name: verso.fileName,
+            //     type: verso.type
+            // });
 
             const config = {
                 headers: {
@@ -93,19 +103,7 @@ const AddScreenApp = () => {
                 try {
                     setIsLoading(true);
                     const response = await axios.post(url + '/api/pieces', formData, config);
-                    const piece = response.data;
-                    const pieceId = piece['@id'];
-                    rectoData.append('piece', pieceId);
-                    versoData.append('piece', pieceId);
-                    const rectoresponse = await axios.post(url + '/api/image_pieces', rectoData, config);
-                    const versoresponse = await axios.post(url + '/api/image_pieces', versoData, config);
-                    const userResponse = await axios.get(url + '/api/users', {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    const userData = userResponse.data["hydra:member"][0];
+                    const userData = response.data;
                     await AsyncStorage.setItem('user', JSON.stringify(userData));
                     dispatch(setUser(userData));
                     Alert.alert("Succès", "Justificatifs mis à jour")

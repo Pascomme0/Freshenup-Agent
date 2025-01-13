@@ -1,21 +1,31 @@
-
 // index.jsx
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useEffect, useState} from 'react';
+import {
+    SafeAreaView,
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Image,
+    Alert,
+    ScrollView,
+    ActivityIndicator
+} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as ImagePicker from 'expo-image-picker';
-import { Link, useRouter } from 'expo-router';
-import { Provider, useDispatch, useSelector } from 'react-redux';
+import {Link, useRouter} from 'expo-router';
+import {Provider, useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import img from '../assets/images/LOGO.png';
-import { store } from './store';
-import { setUser, setToken } from './userSlice';
+import {store} from './store';
+import {setUser, setToken} from './userSlice';
 import * as Notifications from "expo-notifications";
 
 function App() {
     const router = useRouter();
+    const url = "https://admin.freshen-up.net"
     const [step, setStep] = useState(1);
     const [form, setForm] = useState({
         username: '',
@@ -47,7 +57,7 @@ function App() {
         const initializeApp = async () => {
             const credentials = await AsyncStorage.getItem('credentials');
             if (credentials) {
-                const { username, password, token } = JSON.parse(credentials);
+                const {username, password, token} = JSON.parse(credentials);
                 dispatch(setToken(token));
                 await handleBiometricAuth({username, password, token});
             }
@@ -68,7 +78,7 @@ function App() {
             return setPage('LOGIN');
         }
 
-        const { success } = await LocalAuthentication.authenticateAsync({
+        const {success} = await LocalAuthentication.authenticateAsync({
             promptMessage: 'Authenticate',
             fallbackLabel: 'Enter Password',
         });
@@ -81,11 +91,11 @@ function App() {
     };
 
     const registerForPushNotificationsAsync = async (token) => {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        const {status: existingStatus} = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
 
         if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
+            const {status} = await Notifications.requestPermissionsAsync();
             finalStatus = status;
         }
 
@@ -95,7 +105,7 @@ function App() {
         }
         try {
             const tokenExpo = (await Notifications.getExpoPushTokenAsync()).data;
-            const response  = await axios.post("https://admin.freshen-up.net/api/users/set_expo_token", {
+            const response = await axios.post("https://admin.freshen-up.net/api/users/set_expo_token", {
                 expoPushToken: tokenExpo
             }, {
                 headers: {
@@ -129,7 +139,7 @@ function App() {
             if (userData.typeUser.code !== "AGENT") {
                 Alert.alert("Erreur", "Accès interdit")
             } else {
-                await AsyncStorage.setItem('credentials', JSON.stringify({ username, password, token }));
+                await AsyncStorage.setItem('credentials', JSON.stringify({username, password, token}));
                 await AsyncStorage.setItem('user', JSON.stringify(userData));
                 dispatch(setUser(userData));
                 dispatch(setToken(token));
@@ -162,7 +172,7 @@ function App() {
             });
 
             const userData = userResponse.data["hydra:member"][0];
-            await AsyncStorage.setItem('credentials', JSON.stringify({ username, password, token }));
+            await AsyncStorage.setItem('credentials', JSON.stringify({username, password, token}));
             await AsyncStorage.setItem('user', JSON.stringify(userData));
             dispatch(setUser(userData));
             await registerForPushNotificationsAsync(token);
@@ -189,8 +199,26 @@ function App() {
         }
     }
 
+    const verifyUnicity = async (value) => {
+        try {
+            const response = await axios.post(url + "/api/users/verify_unicity", value);
+            if (response.data["error"]) {
+                Alert.alert('Erreur', response.data["message"])
+            }
+            return Boolean(response.data["error"]);
+        } catch (e) {
+            Alert.alert('Erreur', "Vérifier votre connexion à internet")
+            return true
+        }
+
+    }
+
     const handleInputChange = (name, value) => {
-        setForm({ ...form, [name]: value });
+        if (name === 'username' && /\s/.test(value)) {
+            Alert.alert("Erreur", "Le nom d'utilisateur ne doit pas contenir d'espaces.");
+            return;
+        }
+        setForm({...form, [name]: value});
     };
 
     const handleOTPChange = (value) => {
@@ -198,7 +226,7 @@ function App() {
     }
 
     const handleInputLoginChange = (name, value) => {
-        setForm2({ ...form2, [name]: value });
+        setForm2({...form2, [name]: value});
     };
 
     const pickImage = async (type) => {
@@ -209,7 +237,7 @@ function App() {
         });
 
         if (!result.canceled) {
-            setImages({ ...images, [type]: result.assets[0].uri });
+            setImages({...images, [type]: result.assets[0].uri});
         }
     };
 
@@ -234,26 +262,70 @@ function App() {
         }
     };
 
-    const validateStep = () => {
+    const validateStep = async () => {
         switch (step) {
             case 1:
-                return form.username && form.email && form.telephone;
+                setIsLoading(true);
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(form.email)) {
+                    Alert.alert("Erreur", 'Veuillez entrer une adresse email valide.');
+                    setIsLoading(false);
+                    return false;
+                }
+                const phoneRegex = /^\d{10}$/;
+                if (!phoneRegex.test(form.telephone)) {
+                    Alert.alert("Erreur", 'Veuillez entrer un numéro de téléphone valide');
+                    setIsLoading(false);
+                    return false;
+                }
+                if (!form.username) {
+                    Alert.alert("Erreur", 'Tous les champs sont requis');
+                    setIsLoading(false);
+                    return false;
+                }
+                if (await verifyUnicity({email: form.email})) {
+                    setIsLoading(false);
+                    return false;
+                }
+                if (await verifyUnicity({username: form.username})) {
+                    setIsLoading(false);
+                    return false;
+                }
+                if (await verifyUnicity({phone: form.telephone})) {
+                    setIsLoading(false);
+                    return false;
+                }
+                if (form.phone2 && await verifyUnicity({phone: form.telephone})) {
+                    setIsLoading(false);
+                    return false;
+                }
+                setIsLoading(false);
+                return true;
+
             case 2:
-                return form.nom && form.prenoms && form.password && form.confirmPassword && (form.password === form.confirmPassword);
+                if (form.password !== form.confirmPassword) {
+                    Alert.alert("Erreur", 'Les mots de passe doivent être identiques');
+                    return false;
+                }
+                if (!form.nom || !form.prenoms || !form.password) {
+                    Alert.alert("Erreur", 'Tous les champs sont requis');
+                    return false;
+                }
+                return true;
+
             default:
                 return false;
         }
     };
 
+
     const handlePage = (value) => {
         setPage(value);
     };
 
-    const handleNextStep = () => {
-        if (validateStep()) {
+    const handleNextStep = async () => {
+        if (await validateStep()) {
             setStep(step + 1);
-        } else {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs requis avant de continuer.');
         }
     };
 
@@ -273,19 +345,30 @@ function App() {
             case 1:
                 return (
                     <View>
-                        <TextInput placeholder="Nom d'utilisateur" style={inputStyle} value={form.username} onChangeText={(value) => handleInputChange('username', value)} />
-                        <TextInput placeholder="Email" style={inputStyle} value={form.email} onChangeText={(value) => handleInputChange('email', value)} />
-                        <TextInput placeholder="Téléphone" style={inputStyle} keyboardType="phone-pad" value={form.telephone} onChangeText={(value) => handleInputChange('telephone', value)} />
-                        <TextInput placeholder="Téléphone 2" style={inputStyle} keyboardType="phone-pad" value={form.phone2} onChangeText={(value) => handleInputChange('phone2', value)} />
+                        <TextInput placeholder="Nom d'utilisateur" style={inputStyle} value={form.username}
+                                   onChangeText={(value) => handleInputChange('username', value)}/>
+                        <TextInput placeholder="Email" style={inputStyle} value={form.email}
+                                   onChangeText={(value) => handleInputChange('email', value)}/>
+                        <TextInput placeholder="Téléphone" style={inputStyle} keyboardType="phone-pad"
+                                   value={form.telephone}
+                                   onChangeText={(value) => handleInputChange('telephone', value)}/>
+                        <TextInput placeholder="Téléphone 2" style={inputStyle} keyboardType="phone-pad"
+                                   value={form.phone2} onChangeText={(value) => handleInputChange('phone2', value)}/>
                     </View>
                 );
             case 2:
                 return (
                     <View>
-                        <TextInput placeholder="Nom" style={inputStyle} value={form.nom} onChangeText={(value) => handleInputChange('nom', value)} />
-                        <TextInput placeholder="Prénoms" style={inputStyle}  value={form.prenoms} onChangeText={(value) => handleInputChange('prenoms', value)} />
-                        <TextInput placeholder="Mot de Passe" style={inputStyle} value={form.password} secureTextEntry={true} onChangeText={(value) => handleInputChange('password', value)} />
-                        <TextInput placeholder="Confirmer mot de passe" style={inputStyle} value={form.confirmPassword} secureTextEntry={true} onChangeText={(value) => handleInputChange('confirmPassword', value)} />
+                        <TextInput placeholder="Nom" style={inputStyle} value={form.nom}
+                                   onChangeText={(value) => handleInputChange('nom', value)}/>
+                        <TextInput placeholder="Prénoms" style={inputStyle} value={form.prenoms}
+                                   onChangeText={(value) => handleInputChange('prenoms', value)}/>
+                        <TextInput placeholder="Mot de Passe" style={inputStyle} value={form.password}
+                                   secureTextEntry={true}
+                                   onChangeText={(value) => handleInputChange('password', value)}/>
+                        <TextInput placeholder="Confirmer mot de passe" style={inputStyle} value={form.confirmPassword}
+                                   secureTextEntry={true}
+                                   onChangeText={(value) => handleInputChange('confirmPassword', value)}/>
                     </View>
                 );
             default:
@@ -306,8 +389,10 @@ function App() {
         };
         return (
             <View>
-                <TextInput placeholder="Nom d'utilisateur" style={inputStyle} value={form2.username} onChangeText={(value) => handleInputLoginChange('username', value)} />
-                <TextInput placeholder="Mot de passe" style={inputStyle} value={form2.password} onChangeText={(value) => handleInputLoginChange('password', value)} secureTextEntry={true} />
+                <TextInput placeholder="Nom d'utilisateur" style={inputStyle} value={form2.username}
+                           onChangeText={(value) => handleInputLoginChange('username', value)}/>
+                <TextInput placeholder="Mot de passe" style={inputStyle} value={form2.password}
+                           onChangeText={(value) => handleInputLoginChange('password', value)} secureTextEntry={true}/>
             </View>
         );
     };
@@ -339,14 +424,19 @@ function App() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-            <ScrollView style={{ width: '100%', paddingHorizontal: 16 }}>
-                <View style={{ alignItems: 'center', marginVertical: 16 }}>
-                    <Image source={img} style={{ height: 100, width: 120 }} resizeMode="contain" />
+        <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white'}}>
+            <ScrollView style={{width: '100%', paddingHorizontal: 16}}>
+                <View style={{alignItems: 'center', marginVertical: 16}}>
+                    <Image source={img} style={{height: 100, width: 120}} resizeMode="contain"/>
                 </View>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>{page === 'LOGIN' ? 'Connexion' : page === 'REGISTER' ? 'Inscription' : 'Verification'}</Text>
+                <Text style={{
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    marginBottom: 24
+                }}>{page === 'LOGIN' ? 'Connexion' : page === 'REGISTER' ? 'Inscription' : 'Verification'}</Text>
                 {page === 'REGISTER' ? (
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 24 }}>
+                    <View style={{flexDirection: 'row', justifyContent: 'center', marginBottom: 24}}>
                         {[1, 2].map((item) => (
                             <View
                                 key={item}
@@ -360,15 +450,15 @@ function App() {
                                     alignItems: 'center',
                                 }}
                             >
-                                <Text style={{ color: 'white', fontWeight: 'bold' }}>{item}</Text>
+                                <Text style={{color: 'white', fontWeight: 'bold'}}>{item}</Text>
                             </View>
                         ))}
                     </View>
-                ) : ( page === 'LOGIN' ? (
-                    <Text style={{ textAlign: 'center', marginBottom: 24 }}>entrez vos identifiants</Text>
-                    ) : ( <Text style={{ textAlign: 'center', marginBottom: 24 }}>Entrez le code</Text>)
+                ) : (page === 'LOGIN' ? (
+                        <Text style={{textAlign: 'center', marginBottom: 24}}>entrez vos identifiants</Text>
+                    ) : (<Text style={{textAlign: 'center', marginBottom: 24}}>Entrez le code</Text>)
                 )}
-                {page === 'LOGIN' ? renderLoginPage() : page === 'OTP' ? renderOTPPage() :renderStepContent()}
+                {page === 'LOGIN' ? renderLoginPage() : page === 'OTP' ? renderOTPPage() : renderStepContent()}
                 {page === 'REGISTER' ? (
                     <View
                         style={{
@@ -379,51 +469,83 @@ function App() {
                         }}
                     >
                         {step > 1 && (
-                            <TouchableOpacity onPress={() => setStep(step - 1)} style={{ backgroundColor: '#ccc', borderRadius: 5, padding: 10, width: 96 }}>
-                                <Text style={{ textAlign: 'center' }}>Retour</Text>
+                            <TouchableOpacity onPress={() => setStep(step - 1)} style={{
+                                backgroundColor: '#ccc',
+                                borderRadius: 5,
+                                padding: 10,
+                                width: 96
+                            }}>
+                                <Text style={{textAlign: 'center'}}>Retour</Text>
                             </TouchableOpacity>
                         )}
                         {step < 2 ? (
-                            <TouchableOpacity onPress={handleNextStep} style={{ backgroundColor: '#007AFF', borderRadius: 5, padding: 10, width: 96 }}>
-                                <Text style={{ textAlign: 'center', color: 'white' }}>Suivant</Text>
+                            <TouchableOpacity onPress={handleNextStep} style={{
+                                backgroundColor: '#007AFF',
+                                borderRadius: 5,
+                                padding: 10,
+                                width: 96
+                            }}>
+                                {isLoading ? <ActivityIndicator color="#fff"/> :
+                                    <Text style={{textAlign: 'center', color: 'white'}}>Suivant</Text>}
                             </TouchableOpacity>
                         ) : (
                             // <Link replace href="/(tabs)" asChild>
                             //
                             // </Link>
-                            <TouchableOpacity onPress={handleFinish} style={{ backgroundColor: '#28a745', borderRadius: 5, padding: 10, width: 96 }}>
-                        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={{ textAlign: 'center', color: 'white' }}>Terminer</Text>}
+                            <TouchableOpacity onPress={handleFinish} style={{
+                                backgroundColor: '#28a745',
+                                borderRadius: 5,
+                                padding: 10,
+                                width: 96
+                            }}>
+                                {isLoading ? <ActivityIndicator color="#fff"/> :
+                                    <Text style={{textAlign: 'center', color: 'white'}}>Terminer</Text>}
                             </TouchableOpacity>
                         )}
                     </View>
-                ) : ( page === 'OTP' ? (
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-end',
-                            width: '100%',
-                            marginBottom: 24,
-                        }}
-                    >
-                        <TouchableOpacity onPress={() => handleOtpTest(form.username, form.password, otp)} style={{ backgroundColor: '#28a745', borderRadius: 5, padding: 10, width: 150, marginTop: 15 }}>
-                            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={{ textAlign: 'center', color: 'white' }}>Confirmer</Text>}
-                        </TouchableOpacity>
-                    </View>
+                ) : (page === 'OTP' ? (
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'flex-end',
+                                    width: '100%',
+                                    marginBottom: 24,
+                                }}
+                            >
+                                <TouchableOpacity onPress={() => handleOtpTest(form.username, form.password, otp)} style={{
+                                    backgroundColor: '#28a745',
+                                    borderRadius: 5,
+                                    padding: 10,
+                                    width: 150,
+                                    marginTop: 15
+                                }}>
+                                    {isLoading ? <ActivityIndicator color="#fff"/> :
+                                        <Text style={{textAlign: 'center', color: 'white'}}>Confirmer</Text>}
+                                </TouchableOpacity>
+                            </View>
                         ) :
-                    (
-                        <View
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-end',
-                            width: '100%',
-                            marginBottom: 24,
-                        }}
-                        >
-                        <TouchableOpacity onPress={() => handleLogin(form2.username, form2.password, true)} style={{ backgroundColor: '#28a745', borderRadius: 5, padding: 10, width: 150, marginTop: 15 }}>
-                            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={{ textAlign: 'center', color: 'white' }}>Se connecter</Text>}
-                        </TouchableOpacity>
-                    </View>
-                    )
+                        (
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'flex-end',
+                                    width: '100%',
+                                    marginBottom: 24,
+                                }}
+                            >
+                                <TouchableOpacity onPress={() => handleLogin(form2.username, form2.password, true)}
+                                                  style={{
+                                                      backgroundColor: '#28a745',
+                                                      borderRadius: 5,
+                                                      padding: 10,
+                                                      width: 150,
+                                                      marginTop: 15
+                                                  }}>
+                                    {isLoading ? <ActivityIndicator color="#fff"/> :
+                                        <Text style={{textAlign: 'center', color: 'white'}}>Se connecter</Text>}
+                                </TouchableOpacity>
+                            </View>
+                        )
                 )}
                 {
                     page === 'OTP' ? (
@@ -435,7 +557,8 @@ function App() {
                                 marginBottom: 24,
                             }}
                         >
-                            <Text style={{ color: '#007AFF', fontWeight: 'bold' }} onPress={() => handleResendOtp(form.username)}>
+                            <Text style={{color: '#007AFF', fontWeight: 'bold'}}
+                                  onPress={() => handleResendOtp(form.username)}>
                                 Renvoyer le code
                             </Text>
                         </View>
@@ -448,11 +571,13 @@ function App() {
                                 marginBottom: 24,
                             }}
                         >
-                            <Text style={{ color: page === 'REGISTER' ? '#007AFF' : '#000', fontWeight: 'bold' }} onPress={() => handlePage('LOGIN')}>
+                            <Text style={{color: page === 'REGISTER' ? '#007AFF' : '#000', fontWeight: 'bold'}}
+                                  onPress={() => handlePage('LOGIN')}>
                                 Connexion
                             </Text>
-                            <Text style={{ marginHorizontal: 16 }}>•</Text>
-                            <Text style={{ color: page === 'LOGIN' ? '#007AFF' : '#000', fontWeight: 'bold' }} onPress={() => handlePage('REGISTER')}>
+                            <Text style={{marginHorizontal: 16}}>•</Text>
+                            <Text style={{color: page === 'LOGIN' ? '#007AFF' : '#000', fontWeight: 'bold'}}
+                                  onPress={() => handlePage('REGISTER')}>
                                 Inscription
                             </Text>
                         </View>
@@ -466,7 +591,7 @@ function App() {
 export default function Root() {
     return (
         <Provider store={store}>
-            <App />
+            <App/>
         </Provider>
     );
 }

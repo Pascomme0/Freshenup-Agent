@@ -28,7 +28,7 @@ const JustificatifsApp = () => {
 
     return (
         <View style={styles.container}>
-            {items.length === 0 && <Text style={{alignSelf:"center", verticalAlign:"middle"}}>Aucun justificatif</Text>}
+            {items?.length === 0 && <Text style={{alignSelf:"center", verticalAlign:"middle"}}>Aucun justificatif</Text>}
             <FlatList
                 data={items}
                 renderItem={renderItem}

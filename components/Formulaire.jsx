@@ -35,8 +35,90 @@ const FormScreenApp = () => {
         setWhatsapp(user?.phone);
     }, []);
 
+    const handleUsername = (value) => {
+        if (/\s/.test(value)) {
+            Alert.alert("Erreur", "Le nom d'utilisateur ne doit pas contenir d'espaces.");
+            return;
+        }
+        setUsername(value);
+    }
+
+    const verifyUnicity = async (value) => {
+        try {
+            const response = await axios.post(url + "/api/users/verify_unicity", value);
+            if (response.data["error"]) {
+                Alert.alert('Erreur', response.data["message"])
+            }
+            return Boolean(response.data["error"]);
+        } catch (e) {
+            Alert.alert('Erreur', "Vérifier votre connexion à internet")
+            return true
+        }
+
+    }
+
+    const validator = async () => {
+        setIsLoading(true);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert("Erreur",'Veuillez entrer une adresse email valide.');
+            setIsLoading(false);
+            return false
+        }
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(whatsapp)) {
+            Alert.alert("Erreur",'Veuillez entrer un numéro de téléphone valide');
+            setIsLoading(false);
+            return false
+        }
+        if (!username) {
+            Alert.alert("Erreur",'le champ username est requis')
+            setIsLoading(false);
+            return false
+        }
+        if (!firstName) {
+            Alert.alert("Erreur",'le champ prénoms est requis')
+            setIsLoading(false);
+            return false
+        }
+        if (!lastName) {
+            Alert.alert("Erreur",'le champ nom est requis')
+            setIsLoading(false);
+            return false
+        }
+        if (phone2 && !phoneRegex.test(phone2)) {
+            Alert.alert("Erreur",'Veuillez entrer un numéro de téléphone valide')
+            setIsLoading(false);
+            return false
+        }
+        if (user.email !== email) {
+            if (await verifyUnicity({email})) {
+                setIsLoading(false);
+                return false
+            }
+        }
+        if (user.username !== username) {
+            if (await verifyUnicity({username})) {
+                setIsLoading(false);
+                return false
+            }
+        }
+        if (user.phone !== whatsapp){
+            if (await verifyUnicity({phone: whatsapp})) {
+                setIsLoading(false);
+                return false
+            }
+        }
+        if ((user.phone2 !== phone2) && phone2 && await verifyUnicity({phone: phone2})) {
+            setIsLoading(false);
+            return false
+        }
+        setIsLoading(false);
+        return true;
+    }
+
     const handleSubmit = async () => {
-        if (email && lastName && firstName && username && whatsapp) {
+        if (await validator()) {
             // Clear the form fields after successful submission
             try {
                 setIsLoading(true);
@@ -58,12 +140,10 @@ const FormScreenApp = () => {
                 dispatch(setUser(userData));
                 Alert.alert("Succès", "Vos informations ont été mis à jour avec succès");
             } catch (error) {
-                Alert.alert("Erreur", "Une erreur s'est produite lors de la mise à jour de vos informations");
+                Alert.alert("Erreur", "Une erreur s'est produite lors de la mise à jour de vos informations.");
             }
             setIsLoading(false);
             // Navigate to SuccessScreen
-        } else {
-            Alert.alert('Veuillez entrer toutes les informations');
         }
     };
 
@@ -108,7 +188,7 @@ const FormScreenApp = () => {
                 <StyledTextInput
                     placeholder="Nom d'utilisateur"
                     value={username}
-                    onChangeText={setUsername}
+                    onChangeText={(value) => handleUsername(value) }
                     style={{
                         borderColor: '#d1d5db', // border-gray-300
                         borderWidth: 1,

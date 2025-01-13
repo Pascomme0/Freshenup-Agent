@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useSelector, useDispatch } from "react-redux";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {setUser} from "@/app/userSlice";
+import { setUser } from "@/app/userSlice";
 
 const Profile = () => {
     const [imageUri, setImageUri] = useState(null);
     const [url, setUrl] = useState('https://admin.freshen-up.net');
-    const [loadingImage, setLoadingImage] = useState(false);
     const user = useSelector((state) => state.user.user);
     const token = useSelector((state) => state.user.token);
     const dispatch = useDispatch();
@@ -30,14 +29,17 @@ const Profile = () => {
         });
 
         if (!result.canceled) {
-            const { uri, type, fileName } = {uri: result.assets[0].uri, type: result.assets[0].mimeType, fileName: result.assets[0].fileName};
-            setImageUri({ uri, type, fileName });
-            await uploadImageProfile(imageUri);
+            const newImage = {
+                uri: result.assets[0].uri,
+                type: result.assets[0].mimeType,
+                fileName: result.assets[0].fileName
+            };
+            setImageUri(newImage);
+            uploadImageProfile(newImage);
         }
     };
 
     const uploadImageProfile = async (img) => {
-        setLoadingImage(true);
         const formData = new FormData();
         formData.append('profileImageFile', {
             uri: img.uri,
@@ -51,29 +53,24 @@ const Profile = () => {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`
-                },
-                timeout: 10000,
+                }
             });
             const userData = response.data;
             await AsyncStorage.setItem('user', JSON.stringify(userData));
             dispatch(setUser(userData));
+            Alert.alert("Succès", "le profil a été mis à jour")
         } catch (error) {
             Alert.alert("Erreur", "Une erreur s'est produite lors de la mise à jour de votre photo de profil");
         }
-        setLoadingImage(false);
-    }
+    };
 
     return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 14, paddingBottom:10}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 14, paddingBottom: 10 }}>
             <View style={{ position: 'relative' }}>
-                {loadingImage ? (
-                    <ActivityIndicator size="large" color="#0000ff" />
-                ) : (
-                    <Image
-                        source={user?.profileImagePath ? { uri: url + user.profileImagePath } : { uri: 'https://ui-avatars.com/api?background=random&name=' + user?.firstName + '+' + user?.lastName }}
-                        style={{ width: 96, height: 96, borderRadius: 48 }}
-                    />
-                )}
+                <Image
+                    source={imageUri ? { uri: imageUri.uri } : user?.profileImagePath ? { uri: url + user.profileImagePath } : { uri: 'https://ui-avatars.com/api?background=random&name=' + user?.firstName + '+' + user?.lastName }}
+                    style={{ width: 96, height: 96, borderRadius: 48 }}
+                />
                 <TouchableOpacity
                     style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: 'green', padding: 8, borderRadius: 16 }}
                     onPress={pickImage}
@@ -86,12 +83,12 @@ const Profile = () => {
                 <Text style={{ color: 'gray' }}>{user?.email}</Text>
                 <Text style={{ color: 'gray' }}>{user?.phone ? '+225 ' + user?.phone : ''}</Text>
                 <Text style={user?.statutCandidature ?
-                    ((user?.statutCandidature === "PENDING") ? ({color: 'blue'}) :
-                            ((user?.statutCandidature === "ACCEPTED") ? ({color: 'green'}) : ({color: 'red'}))
+                    ((user?.statutCandidature === "PENDING") ? ({ color: 'blue' }) :
+                            ((user?.statutCandidature === "ACCEPTED") ? ({ color: 'green' }) : ({ color: 'red' }))
                     ) : ''}>{user?.statutCandidature ?
-                    (user?.statutCandidature === 'PENDING'? 'Candidature en attente' :
-                            (user?.statutCandidature === 'ACCEPTED'? 'Candidature acceptée' : 'Candidature refusée')
-                    ) : '' }</Text>
+                    (user?.statutCandidature === 'PENDING' ? 'Candidature en attente' :
+                            (user?.statutCandidature === 'ACCEPTED' ? 'Candidature acceptée' : 'Candidature refusée')
+                    ) : ''}</Text>
             </View>
         </View>
     );
