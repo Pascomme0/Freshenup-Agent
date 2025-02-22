@@ -423,6 +423,22 @@ function App() {
         );
     };
 
+    async function handleCancel(username) {
+        setIsLoading(true);
+        try {
+            const response = await axios.post('https://admin.freshen-up.net/api/users/cancel', {
+                'username': username
+            });
+
+            setStep(1);
+            handlePage('REGISTER');
+        } catch (error) {
+            Alert.alert('Erreur', "Une erreur s'est produite vérifier votre connexion internet");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white'}}>
             <ScrollView style={{width: '100%', paddingHorizontal: 16}}>
@@ -455,9 +471,18 @@ function App() {
                         ))}
                     </View>
                 ) : (page === 'LOGIN' ? (
-                        <Text style={{textAlign: 'center', marginBottom: 24}}>entrez vos identifiants</Text>
-                    ) : (<Text style={{textAlign: 'center', marginBottom: 24}}>Entrez le code</Text>)
-                )}
+                    <Text style={{textAlign: 'center', marginBottom: 24}}>entrez vos identifiants</Text>
+                ) : (
+                    <View>
+                        <Text style={{textAlign: 'center', marginBottom: 24}}>
+                            Un code a été par sms au {form.telephone}, Ce n'est pas le votre ? <Text style={{color: '#007AFF', fontWeight: 'bold'}}
+                                                                                                     onPress={() => handleCancel(form.username)}>
+                            Modifier mon numéro
+                        </Text>
+                        </Text>
+                    </View>
+                    )
+                    )}
                 {page === 'LOGIN' ? renderLoginPage() : page === 'OTP' ? renderOTPPage() : renderStepContent()}
                 {page === 'REGISTER' ? (
                     <View

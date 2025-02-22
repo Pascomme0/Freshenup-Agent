@@ -103,7 +103,13 @@ const AddScreenApp = () => {
                 try {
                     setIsLoading(true);
                     const response = await axios.post(url + '/api/pieces', formData, config);
-                    const userData = response.data;
+                    const userResponse = await axios.get(url + '/api/users', {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    const userData = userResponse.data["hydra:member"][0];
                     await AsyncStorage.setItem('user', JSON.stringify(userData));
                     dispatch(setUser(userData));
                     Alert.alert("Succès", "Justificatifs mis à jour")
