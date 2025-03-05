@@ -475,9 +475,9 @@ function App() {
                 ) : (
                     <View>
                         <Text style={{textAlign: 'center', marginBottom: 24}}>
-                            Un code a été par sms au {form.telephone}, Ce n'est pas le votre ? <Text style={{color: '#007AFF', fontWeight: 'bold'}}
+                            Un code a été envoyé par mail à l'adresse {form.email}, Ce n'est pas le votre ? <Text style={{color: '#007AFF', fontWeight: 'bold'}}
                                                                                                      onPress={() => handleCancel(form.username)}>
-                            Modifier mon numéro
+                            Modifier mon adresse mail
                         </Text>
                         </Text>
                     </View>
